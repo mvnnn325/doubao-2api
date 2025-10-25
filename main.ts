@@ -1,12 +1,12 @@
-#!/usr/bin/env -S deno run --allow-net --allow-env --allow-read
+#!/usr/bin/env -S deno run --allow-net --allow-read
 /**
- * doubao-2api - Deno 单文件版本
+ * doubao-2api - Deno 单文件版本（完全自包含）
  * 
  * 一个将 doubao.com 转换为兼容 OpenAI 格式 API 的高性能代理
  * 内置 a_bogus 签名解决方案（使用 Playwright）
  * 
  * 使用方法：
- *   deno run --allow-net --allow-env --allow-read main.ts
+ *   deno run --allow-net --allow-read main.ts
  * 
  * 或者添加执行权限后直接运行：
  *   chmod +x main.ts
@@ -18,7 +18,61 @@ import type { Browser, Page } from "npm:playwright@1.48.2";
 import { default as stealthPlugin } from "npm:puppeteer-extra-plugin-stealth@2.11.2";
 
 // ============================================================================
-// 配置管理模块
+// 🔧 配置区域 - 请在此处修改您的配置
+// ============================================================================
+
+const CONFIG = {
+  // --- 核心安全配置 ---
+  // 用于保护您 API 服务的访问密钥
+  // 如果设置为 "1"，则不启用认证；建议设置为复杂的密钥
+  API_MASTER_KEY: "sk-doubao-2api-your-secret-key-please-change-me",
+  
+  // --- 部署配置 ---
+  // 服务监听的端口号
+  PORT: 8088,
+  
+  // --- 豆包凭证 (必须配置) ---
+  // 从浏览器开发者工具中获取完整的 Cookie 字符串
+  // 步骤：
+  // 1. 打开 https://www.doubao.com/chat/
+  // 2. 按 F12 打开开发者工具
+  // 3. 切换到"网络(Network)"面板
+  // 4. 发送一条消息
+  // 5. 在请求列表中找到 `completion` 请求
+  // 6. 右键 -> 复制 -> 复制为 cURL (bash)
+  // 7. 从 cURL 命令中找到 `--cookie '...'` 部分，将其内容粘贴到下方
+  //
+  // 支持多账号轮询，只需在数组中添加更多 Cookie 字符串
+  DOUBAO_COOKIES: [
+    "_ga=GA1.1.106161677.1751986993; flow_user_country=CN; gd_random=eyJtYXRjaCI6dHJ1ZSwicGVyY2VudCI6MC40MDU4OTQxMTgwNjU5MTE5fQ==.uh5yd/EnUakcjRfWWa6OAVFeFHG5u3323TQ8c+A+MLk=; i18next=zh; flow_ssr_sidebar_expand=1; s_v_web_id=verify_mgyqvccs_blJSa2yy_7EW7_4Hyr_Ato6_bIPsXGNXitoz; passport_csrf_token=9eb3d0afec2be115cdb721e991cad1b3; passport_csrf_token_default=9eb3d0afec2be115cdb721e991cad1b3; passport_mfa_token=CjH5jul%2F30qQ%2BaY1jB%2Bnx8LpCcE48Hfop4c3MhxuEeBUFGs%2F8N4JhuZF4s7GeMeZN4w7GkoKPAAAAAAAAAAAAABPnWDhWnZOf2mKtl3lVJ%2FVMkKzWl5s%2BC8ctO%2BrbX8YwHlINTsmlfrNIskE71bYKnJQZRCEqf8NGPax0WwgAiIBA94Lbu8%3D; d_ticket=36e308ea7e3ffb14723f2139e51a83650034a; odin_tt=2eaa81b7b48fba60218c5f378553f4ce3c982fb25d8ee50efd4068f0427b0d95acf5f4570a1dc7c49aca53a61ed61ffb61c9e3f6c3eed5aa61fdb4ad6e00367f; n_mh=-FPXT10Y1ouY2RTXstCfFAbnlgz1v6FIer_PG9SzZ44; passport_auth_status=ba23b06ba9b3eb71cad40d03cc59fee6%2C; passport_auth_status_ss=ba23b06ba9b3eb71cad40d03cc59fee6%2C; sid_guard=3aa7bb87c6eeb0906760f16063aed75e%7C1760941125%7C2592000%7CWed%2C+19-Nov-2025+06%3A18%3A45+GMT; uid_tt=111f0e12e200a498139cb9e298827580; uid_tt_ss=111f0e12e200a498139cb9e298827580; sid_tt=3aa7bb87c6eeb0906760f16063aed75e; sessionid=3aa7bb87c6eeb0906760f16063aed75e; sessionid_ss=3aa7bb87c6eeb0906760f16063aed75e; session_tlb_tag=sttt%7C12%7COqe7h8busJBnYPFgY67XXv__________uXbtksAL_RkZw0L15F060kJ4FWWF3mfsmREcj6H4lXQ%3D; is_staff_user=false; sid_ucp_v1=1.0.0-KGI3YjM1OTk4NzUzOTM2MTY1Yjc4ZWM2M2Y0MDM3NmYwZTZhYzdjMzQKIAj5tLDq9a3wARDFqNfHBhjCsR4gDDDFqNfHBjgCQOwHGgJsZiIgM2FhN2JiODdjNmVlYjA5MDY3NjBmMTYwNjNhZWQ3NWU; ssid_ucp_v1=1.0.0-KGI3YjM1OTk4NzUzOTM2MTY1Yjc4ZWM2M2Y0MDM3NmYwZTZhYzdjMzQKIAj5tLDq9a3wARDFqNfHBhjCsR4gDDDFqNfHBjgCQOwHGgJsZiIgM2FhN2JiODdjNmVlYjA5MDY3NjBmMTYwNjNhZWQ3NWU; ttwid=1%7CYEzH0bhSHZjjqJLjeG5eHfpnB2RWiIe7DuumYAzUrDM%7C1760941158%7Cb7af9ac18f1a4364c95082df532abdbe68c1cb101f0af864be1eed84eff356a2; passport_fe_beating_status=true; _ga_G8EP5CG8VZ=GS2.1.s1760941083$o54$g1$t1760941158$j60$l0$h0",
+    // 第二个账号的 Cookie（可选）
+    // "在此处粘贴第二个账号的 Cookie 字符串",
+    // 第三个账号的 Cookie（可选）
+    // "在此处粘贴第三个账号的 Cookie 字符串",
+  ],
+  
+  // --- 静态设备指纹 (必须配置) ---
+  // 从浏览器抓包的有效请求中提取以下参数：
+  // 在开发者工具的网络面板中，找到 completion 请求，查看其查询参数（Query String Parameters）
+  DOUBAO_DEVICE_ID: "7524726744148264511",
+  DOUBAO_FP: "verify_mgyqvccs_blJSa2yy_7EW7_4Hyr_Ato6_bIPsXGNXitoz",
+  DOUBAO_TEA_UUID: "7524726753203160619",
+  DOUBAO_WEB_ID: "7524726753203160619",
+  
+  // --- 会话管理 (可选) ---
+  // 对话历史在内存中的缓存时间（秒），默认1小时
+  SESSION_CACHE_TTL: 3600,
+  
+  // --- 高级配置 (可选) ---
+  API_REQUEST_TIMEOUT: 180000, // 上游请求超时时间（毫秒）
+  DEFAULT_MODEL: "doubao-pro-chat", // 默认模型
+  MODEL_MAPPING: {
+    "doubao-pro-chat": "7338286299411103781", // 模型 ID 映射
+  },
+};
+
+// ============================================================================
+// 配置管理模块（自动化处理）
 // ============================================================================
 
 interface AppConfig {
@@ -47,46 +101,32 @@ class ConfigManager {
   }
 
   private loadConfig(): AppConfig {
-    const cookies: string[] = [];
-    let i = 1;
-    while (true) {
-      const cookieStr = Deno.env.get(`DOUBAO_COOKIE_${i}`);
-      if (cookieStr) {
-        cookies.push(cookieStr);
-        i++;
-      } else {
-        break;
-      }
-    }
-
     return {
-      APP_NAME: Deno.env.get("APP_NAME") || "doubao-2api",
-      APP_VERSION: Deno.env.get("APP_VERSION") || "1.0.0-deno",
-      DESCRIPTION: Deno.env.get("DESCRIPTION") || "一个将 doubao.com 转换为兼容 OpenAI 格式 API 的高性能代理（Deno版）",
-      API_MASTER_KEY: Deno.env.get("API_MASTER_KEY") || "1",
-      NGINX_PORT: parseInt(Deno.env.get("NGINX_PORT") || "8088"),
-      DOUBAO_COOKIES: cookies,
-      DOUBAO_DEVICE_ID: Deno.env.get("DOUBAO_DEVICE_ID") || "",
-      DOUBAO_FP: Deno.env.get("DOUBAO_FP") || "",
-      DOUBAO_TEA_UUID: Deno.env.get("DOUBAO_TEA_UUID") || "",
-      DOUBAO_WEB_ID: Deno.env.get("DOUBAO_WEB_ID") || "",
-      API_REQUEST_TIMEOUT: parseInt(Deno.env.get("API_REQUEST_TIMEOUT") || "180000"),
-      SESSION_CACHE_TTL: parseInt(Deno.env.get("SESSION_CACHE_TTL") || "3600"),
-      DEFAULT_MODEL: Deno.env.get("DEFAULT_MODEL") || "doubao-pro-chat",
-      MODEL_MAPPING: {
-        "doubao-pro-chat": "7338286299411103781",
-      },
+      APP_NAME: "doubao-2api",
+      APP_VERSION: "1.0.0-deno",
+      DESCRIPTION: "一个将 doubao.com 转换为兼容 OpenAI 格式 API 的高性能代理（Deno版）",
+      API_MASTER_KEY: CONFIG.API_MASTER_KEY,
+      NGINX_PORT: CONFIG.PORT,
+      DOUBAO_COOKIES: CONFIG.DOUBAO_COOKIES.filter(c => c && c.trim() !== ""),
+      DOUBAO_DEVICE_ID: CONFIG.DOUBAO_DEVICE_ID,
+      DOUBAO_FP: CONFIG.DOUBAO_FP,
+      DOUBAO_TEA_UUID: CONFIG.DOUBAO_TEA_UUID,
+      DOUBAO_WEB_ID: CONFIG.DOUBAO_WEB_ID,
+      API_REQUEST_TIMEOUT: CONFIG.API_REQUEST_TIMEOUT,
+      SESSION_CACHE_TTL: CONFIG.SESSION_CACHE_TTL,
+      DEFAULT_MODEL: CONFIG.DEFAULT_MODEL,
+      MODEL_MAPPING: CONFIG.MODEL_MAPPING,
     };
   }
 
   private validateConfig(): void {
     if (this.config.DOUBAO_COOKIES.length === 0) {
-      throw new Error("必须在 .env 文件中至少配置一个有效的 DOUBAO_COOKIE_1");
+      throw new Error("❌ 必须在文件顶部的 CONFIG.DOUBAO_COOKIES 中至少配置一个有效的 Cookie");
     }
 
     if (!this.config.DOUBAO_DEVICE_ID || !this.config.DOUBAO_FP || 
         !this.config.DOUBAO_TEA_UUID || !this.config.DOUBAO_WEB_ID) {
-      throw new Error("必须在 .env 文件中配置完整的设备指纹参数 (DOUBAO_DEVICE_ID, DOUBAO_FP, DOUBAO_TEA_UUID, DOUBAO_WEB_ID)");
+      throw new Error("❌ 必须在文件顶部的 CONFIG 中配置完整的设备指纹参数 (DOUBAO_DEVICE_ID, DOUBAO_FP, DOUBAO_TEA_UUID, DOUBAO_WEB_ID)");
     }
 
     console.log(`✅ 配置验证通过，加载了 ${this.config.DOUBAO_COOKIES.length} 个凭证`);
