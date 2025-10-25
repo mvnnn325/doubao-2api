@@ -1,4 +1,4 @@
-#!/usr/bin/env -S deno run --allow-net --allow-read
+#!/usr/bin/env -S deno run --allow-net --allow-read --allow-write --allow-env
 /**
  * doubao-2api - Deno 单文件版本（完全自包含）
  * 
@@ -6,7 +6,7 @@
  * 内置 a_bogus 签名解决方案（使用 Playwright）
  * 
  * 使用方法：
- *   deno run --allow-net --allow-read main.ts
+ *   deno run --allow-net --allow-read --allow-write --allow-env main.ts
  * 
  * 或者添加执行权限后直接运行：
  *   chmod +x main.ts
@@ -197,9 +197,17 @@ class PlaywrightManager {
     console.log("🚀 正在初始化 Playwright 管理器 (签名服务模式)...");
 
     try {
+      // 设置 Playwright 环境变量，避免权限问题
+      Deno.env.set("PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", "0");
+      
       this.browser = await chromium.launch({
         headless: true,
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        args: [
+          "--no-sandbox", 
+          "--disable-setuid-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu"
+        ],
       });
 
       this.page = await this.browser.newPage();

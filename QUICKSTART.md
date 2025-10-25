@@ -28,40 +28,30 @@ const CONFIG = {
   // 1. 修改 API 密钥（用于保护您的服务）
   API_MASTER_KEY: "sk-your-super-secret-key-here",
   
-  // 2. 粘贴您的豆包 Cookie
+  // 2. 粘贴您的豆包 Cookie（唯一必需的配置）
   DOUBAO_COOKIES: [
     "在这里粘贴从浏览器复制的完整 Cookie 字符串",
   ],
-  
-  // 3. 粘贴设备指纹参数（从浏览器开发者工具获取）
-  DOUBAO_DEVICE_ID: "您的device_id",
-  DOUBAO_FP: "您的fp",
-  DOUBAO_TEA_UUID: "您的tea_uuid",
-  DOUBAO_WEB_ID: "您的web_id",
 };
 ```
 
-#### 🍪 如何获取 Cookie 和设备指纹？
+#### 🍪 如何获取 Cookie？
 
 1. 访问 https://www.doubao.com/chat/ 并登录
 2. 按 `F12` 打开开发者工具
 3. 切换到 **Network（网络）** 标签
 4. 在豆包界面发送一条测试消息（例如："你好"）
 5. 在请求列表中找到 **`completion`** 请求，点击它
-6. 在右侧面板：
-   - **Headers（请求头）** 标签 → 找到 `Cookie:` → 复制完整值
-   - **Payload** 或 **Query String Parameters** 标签 → 复制这些参数：
-     - `device_id`
-     - `fp`
-     - `tea_uuid`
-     - `web_id`
+6. 在右侧面板的 **Headers（请求头）** 标签中
+7. 找到 `Cookie:` 字段，复制完整的 Cookie 值
+8. 粘贴到 `CONFIG.DOUBAO_COOKIES` 数组中
 
 ---
 
 ### 步骤 3️⃣：运行服务
 
 ```bash
-deno run --allow-net --allow-read main.ts
+deno run --allow-net --allow-read --allow-write --allow-env main.ts
 ```
 
 看到以下输出表示启动成功：
@@ -153,10 +143,9 @@ for chunk in response:
 
 **可能原因**：
 - Cookie 已过期 → 重新获取
-- 设备指纹失效 → 重新获取
 - IP 被限制 → 更换网络
 
-**解决方法**：重新按照步骤 2 获取最新的 Cookie 和设备指纹
+**解决方法**：重新按照步骤 2 获取最新的 Cookie
 
 ---
 
