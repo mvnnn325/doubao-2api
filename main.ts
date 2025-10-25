@@ -44,20 +44,10 @@ const CONFIG = {
   //
   // 支持多账号轮询，只需在数组中添加更多 Cookie 字符串
   DOUBAO_COOKIES: [
-    "_ga=GA1.1.106161677.1751986993; flow_user_country=CN; gd_random=eyJtYXRjaCI6dHJ1ZSwicGVyY2VudCI6MC40MDU4OTQxMTgwNjU5MTE5fQ==.uh5yd/EnUakcjRfWWa6OAVFeFHG5u3323TQ8c+A+MLk=; i18next=zh; flow_ssr_sidebar_expand=1; s_v_web_id=verify_mgyqvccs_blJSa2yy_7EW7_4Hyr_Ato6_bIPsXGNXitoz; passport_csrf_token=9eb3d0afec2be115cdb721e991cad1b3; passport_csrf_token_default=9eb3d0afec2be115cdb721e991cad1b3; passport_mfa_token=CjH5jul%2F30qQ%2BaY1jB%2Bnx8LpCcE48Hfop4c3MhxuEeBUFGs%2F8N4JhuZF4s7GeMeZN4w7GkoKPAAAAAAAAAAAAABPnWDhWnZOf2mKtl3lVJ%2FVMkKzWl5s%2BC8ctO%2BrbX8YwHlINTsmlfrNIskE71bYKnJQZRCEqf8NGPax0WwgAiIBA94Lbu8%3D; d_ticket=36e308ea7e3ffb14723f2139e51a83650034a; odin_tt=2eaa81b7b48fba60218c5f378553f4ce3c982fb25d8ee50efd4068f0427b0d95acf5f4570a1dc7c49aca53a61ed61ffb61c9e3f6c3eed5aa61fdb4ad6e00367f; n_mh=-FPXT10Y1ouY2RTXstCfFAbnlgz1v6FIer_PG9SzZ44; passport_auth_status=ba23b06ba9b3eb71cad40d03cc59fee6%2C; passport_auth_status_ss=ba23b06ba9b3eb71cad40d03cc59fee6%2C; sid_guard=3aa7bb87c6eeb0906760f16063aed75e%7C1760941125%7C2592000%7CWed%2C+19-Nov-2025+06%3A18%3A45+GMT; uid_tt=111f0e12e200a498139cb9e298827580; uid_tt_ss=111f0e12e200a498139cb9e298827580; sid_tt=3aa7bb87c6eeb0906760f16063aed75e; sessionid=3aa7bb87c6eeb0906760f16063aed75e; sessionid_ss=3aa7bb87c6eeb0906760f16063aed75e; session_tlb_tag=sttt%7C12%7COqe7h8busJBnYPFgY67XXv__________uXbtksAL_RkZw0L15F060kJ4FWWF3mfsmREcj6H4lXQ%3D; is_staff_user=false; sid_ucp_v1=1.0.0-KGI3YjM1OTk4NzUzOTM2MTY1Yjc4ZWM2M2Y0MDM3NmYwZTZhYzdjMzQKIAj5tLDq9a3wARDFqNfHBhjCsR4gDDDFqNfHBjgCQOwHGgJsZiIgM2FhN2JiODdjNmVlYjA5MDY3NjBmMTYwNjNhZWQ3NWU; ssid_ucp_v1=1.0.0-KGI3YjM1OTk4NzUzOTM2MTY1Yjc4ZWM2M2Y0MDM3NmYwZTZhYzdjMzQKIAj5tLDq9a3wARDFqNfHBhjCsR4gDDDFqNfHBjgCQOwHGgJsZiIgM2FhN2JiODdjNmVlYjA5MDY3NjBmMTYwNjNhZWQ3NWU; ttwid=1%7CYEzH0bhSHZjjqJLjeG5eHfpnB2RWiIe7DuumYAzUrDM%7C1760941158%7Cb7af9ac18f1a4364c95082df532abdbe68c1cb101f0af864be1eed84eff356a2; passport_fe_beating_status=true; _ga_G8EP5CG8VZ=GS2.1.s1760941083$o54$g1$t1760941158$j60$l0$h0",
+    "在此处粘贴您的完整 Cookie 字符串",
     // 第二个账号的 Cookie（可选）
     // "在此处粘贴第二个账号的 Cookie 字符串",
-    // 第三个账号的 Cookie（可选）
-    // "在此处粘贴第三个账号的 Cookie 字符串",
   ],
-  
-  // --- 静态设备指纹 (必须配置) ---
-  // 从浏览器抓包的有效请求中提取以下参数：
-  // 在开发者工具的网络面板中，找到 completion 请求，查看其查询参数（Query String Parameters）
-  DOUBAO_DEVICE_ID: "7524726744148264511",
-  DOUBAO_FP: "verify_mgyqvccs_blJSa2yy_7EW7_4Hyr_Ato6_bIPsXGNXitoz",
-  DOUBAO_TEA_UUID: "7524726753203160619",
-  DOUBAO_WEB_ID: "7524726753203160619",
   
   // --- 会话管理 (可选) ---
   // 对话历史在内存中的缓存时间（秒），默认1小时
@@ -82,10 +72,6 @@ interface AppConfig {
   API_MASTER_KEY: string;
   NGINX_PORT: number;
   DOUBAO_COOKIES: string[];
-  DOUBAO_DEVICE_ID: string;
-  DOUBAO_FP: string;
-  DOUBAO_TEA_UUID: string;
-  DOUBAO_WEB_ID: string;
   API_REQUEST_TIMEOUT: number;
   SESSION_CACHE_TTL: number;
   DEFAULT_MODEL: string;
@@ -107,11 +93,7 @@ class ConfigManager {
       DESCRIPTION: "一个将 doubao.com 转换为兼容 OpenAI 格式 API 的高性能代理（Deno版）",
       API_MASTER_KEY: CONFIG.API_MASTER_KEY,
       NGINX_PORT: CONFIG.PORT,
-      DOUBAO_COOKIES: CONFIG.DOUBAO_COOKIES.filter(c => c && c.trim() !== ""),
-      DOUBAO_DEVICE_ID: CONFIG.DOUBAO_DEVICE_ID,
-      DOUBAO_FP: CONFIG.DOUBAO_FP,
-      DOUBAO_TEA_UUID: CONFIG.DOUBAO_TEA_UUID,
-      DOUBAO_WEB_ID: CONFIG.DOUBAO_WEB_ID,
+      DOUBAO_COOKIES: CONFIG.DOUBAO_COOKIES.filter(c => c && c.trim() !== "" && !c.startsWith("在此处粘贴")),
       API_REQUEST_TIMEOUT: CONFIG.API_REQUEST_TIMEOUT,
       SESSION_CACHE_TTL: CONFIG.SESSION_CACHE_TTL,
       DEFAULT_MODEL: CONFIG.DEFAULT_MODEL,
@@ -122,11 +104,6 @@ class ConfigManager {
   private validateConfig(): void {
     if (this.config.DOUBAO_COOKIES.length === 0) {
       throw new Error("❌ 必须在文件顶部的 CONFIG.DOUBAO_COOKIES 中至少配置一个有效的 Cookie");
-    }
-
-    if (!this.config.DOUBAO_DEVICE_ID || !this.config.DOUBAO_FP || 
-        !this.config.DOUBAO_TEA_UUID || !this.config.DOUBAO_WEB_ID) {
-      throw new Error("❌ 必须在文件顶部的 CONFIG 中配置完整的设备指纹参数 (DOUBAO_DEVICE_ID, DOUBAO_FP, DOUBAO_TEA_UUID, DOUBAO_WEB_ID)");
     }
 
     console.log(`✅ 配置验证通过，加载了 ${this.config.DOUBAO_COOKIES.length} 个凭证`);
@@ -206,17 +183,10 @@ class PlaywrightManager {
   private page: Page | null = null;
   private initialized = false;
   private msToken: string | null = null;
-  private staticDeviceFingerprint: Record<string, string>;
   private config: AppConfig;
 
   constructor(config: AppConfig) {
     this.config = config;
-    this.staticDeviceFingerprint = {
-      device_id: config.DOUBAO_DEVICE_ID,
-      fp: config.DOUBAO_FP,
-      web_id: config.DOUBAO_WEB_ID,
-      tea_uuid: config.DOUBAO_TEA_UUID,
-    };
   }
 
   public async initialize(cookies: string[]): Promise<void> {
@@ -310,7 +280,6 @@ class PlaywrightManager {
         }
       }
 
-      console.log(`✅ 已从配置中加载静态设备指纹: ${JSON.stringify(this.staticDeviceFingerprint)}`);
       console.log("✅ Playwright 管理器 (签名服务模式) 初始化完成");
       this.initialized = true;
     } catch (error) {
@@ -335,7 +304,7 @@ class PlaywrightManager {
     try {
       console.log("🔐 正在使用 Playwright 生成 a_bogus 签名...");
 
-      const finalParams = { ...baseParams, ...this.staticDeviceFingerprint };
+      const finalParams = { ...baseParams };
       finalParams.web_tab_id = crypto.randomUUID();
 
       if (this.msToken) {
@@ -355,7 +324,7 @@ class PlaywrightManager {
       const finalQueryString = new URLSearchParams(sortedParams).toString();
       const urlWithParams = `${baseUrl}?${finalQueryString}`;
 
-      console.log(`🔐 正在使用静态指纹和排序后的参数调用 window.byted_acrawler.frontierSign: "${finalQueryString}"`);
+      console.log(`🔐 正在调用 window.byted_acrawler.frontierSign 生成签名: "${finalQueryString}"`);
       const signatureObj = await this.page.evaluate(
         (queryString: string) => {
           return (window as any).byted_acrawler.frontierSign(queryString);
